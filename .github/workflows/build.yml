@@ -12,20 +12,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'gradle'
 
       - name: Setup Gradle Environment
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Prepare environment file
+      - name: Prepare environment and keystore
         run: |
           if [ ! -f .env ]; then
             cp .env.example .env 2>/dev/null || touch .env
+          fi
+          if [ ! -f debug.keystore ]; then
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
 
       - name: Grant execute permission for gradlew
@@ -34,9 +37,9 @@ jobs:
       - name: Build Debug APK
         run: |
           if [ -x "./gradlew" ]; then
-            ./gradlew assembleDebug --stacktrace --no-daemon
+            ./gradlew :app:assembleDebug --stacktrace --no-daemon
           else
-            gradle assembleDebug --stacktrace --no-daemon
+            gradle :app:assembleDebug --stacktrace --no-daemon
           fi
 
       - name: Upload APK Artifact
