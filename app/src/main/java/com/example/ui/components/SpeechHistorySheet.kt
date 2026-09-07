@@ -16,10 +16,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -55,7 +57,9 @@ fun SpeechHistoryDialog(
     onPlayItem: (SpeechHistoryEntity) -> Unit,
     onToggleFavorite: (SpeechHistoryEntity) -> Unit,
     onDeleteItem: (SpeechHistoryEntity) -> Unit,
-    onClearAll: () -> Unit
+    onClearAll: () -> Unit,
+    onDownloadItem: (SpeechHistoryEntity) -> Unit = {},
+    onShareItem: (SpeechHistoryEntity) -> Unit = {}
 ) {
     var showFavoritesOnly by remember { mutableStateOf(false) }
 
@@ -174,7 +178,9 @@ fun SpeechHistoryDialog(
                                 item = item,
                                 onPlay = { onPlayItem(item) },
                                 onToggleFavorite = { onToggleFavorite(item) },
-                                onDelete = { onDeleteItem(item) }
+                                onDelete = { onDeleteItem(item) },
+                                onDownload = { onDownloadItem(item) },
+                                onShare = { onShareItem(item) }
                             )
                         }
                     }
@@ -189,7 +195,9 @@ private fun HistoryItemCard(
     item: SpeechHistoryEntity,
     onPlay: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onDownload: () -> Unit = {},
+    onShare: () -> Unit = {}
 ) {
     val dateStr = remember(item.timestamp) {
         SimpleDateFormat("dd MMM, HH:mm", Locale("id", "ID")).format(Date(item.timestamp))
@@ -273,6 +281,32 @@ private fun HistoryItemCard(
             }
 
             // Action Buttons
+            if (item.audioFilePath != null) {
+                IconButton(
+                    onClick = onDownload,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Unduh Audio",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = onShare,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Bagikan",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
             IconButton(
                 onClick = onToggleFavorite,
                 modifier = Modifier.size(32.dp)

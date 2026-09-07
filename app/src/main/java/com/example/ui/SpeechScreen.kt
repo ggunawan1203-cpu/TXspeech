@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -225,6 +226,7 @@ fun SpeechScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Button(
@@ -439,7 +441,9 @@ fun SpeechScreen(
                         } ?: viewModel.speakCurrentText()
                     },
                     onSeek = { targetMs -> viewModel.audioPlayer.seekTo(targetMs) },
-                    onToggleSave = { viewModel.toggleSaveCurrentAudio() }
+                    onToggleSave = { viewModel.toggleSaveCurrentAudio() },
+                    onDownload = { viewModel.downloadCurrentAudio() },
+                    onShare = { viewModel.shareCurrentAudio() }
                 )
             }
 
@@ -497,7 +501,9 @@ fun SpeechScreen(
             onPlayItem = { item -> viewModel.playHistoryItem(item) },
             onToggleFavorite = { item -> viewModel.toggleFavorite(item) },
             onDeleteItem = { item -> viewModel.deleteHistoryItem(item) },
-            onClearAll = { viewModel.clearAllHistory() }
+            onClearAll = { viewModel.clearAllHistory() },
+            onDownloadItem = { item -> viewModel.downloadHistoryAudio(item) },
+            onShareItem = { item -> viewModel.shareHistoryAudio(item) }
         )
     }
 }

@@ -3,6 +3,7 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.audio.AudioExportManager
 import com.example.audio.AudioPlayerManager
 import com.example.audio.DeviceTtsManager
 import com.example.audio.GeminiTtsService
@@ -324,6 +325,109 @@ class SpeechViewModel(application: Application) : AndroidViewModel(application) 
             _currentSavedEntity.value = null
             _snackbarMessage.emit("Semua riwayat dibersihkan")
         }
+    }
+
+    /**
+     * Downloads currently generated audio to public device Downloads folder
+     */
+    fun downloadCurrentAudio() {
+        val bytes = _lastGeneratedBytes.value
+            ?: _currentSavedEntity.value?.audioFilePath?.let { path ->
+                val f = File(path)
+                if (f.exists()) f.readBytes() else null
+            }
+
+        if (bytes == null || bytes.isEmpty()) {
+            viewModelScope.launch {
+                _snackbarMessage.emit("Belum ada audio yang dapat diunduh. Ucapkan teks dengan Suara AI terlebih dahulu.")
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            val result = AudioExportManager.saveAudioToDownloads(
+                context = getApplication(),
+                audioBytes = bytes,
+                baseFileName = _selectedVoice.value.name
+            )
+            result.onSuccess { msg ->
+                _snackbarMessage.emit("Berhasil! $msg")
+            }.onFailure { err ->
+                _snackbarMessage.emit("Gagal mengunduh: ${err.message ?: "Terjadi kesalahan"}")
+            }
+        }
+    }
+
+    /**
+     * Shares currently generated audio to other apps (WhatsApp, Telegram, etc.)
+     */
+    fun shareCurrentAudio() {
+        val bytes = _lastGeneratedBytes.value
+        val entityPath = _currentSavedEntity.value?.audioFilePath
+
+        if (bytes != null && bytes.isNotEmpty()) {
+            AudioExportManager.shareAudio(
+                context = getApplication(),
+                audioBytes = bytes,
+                title = _selectedVoice.value.name
+            )
+        } else if (!entityPath.isNullOrBlank() && File(entityPath).exists()) {
+            AudioExportManager.shareAudioFile(
+                context = getApplication(),
+                filePath = entityPath,
+                title = _selectedVoice.value.name
+            )
+        } else {
+            viewModelScope.launch {
+                _snackbarMessage.emit("Belum ada file audio untuk dibagikan. Ucapkan teks terlebih dahulu.")
+            }
+        }
+    }
+
+    /**
+     * Downloads an audio item from history
+     */
+    fun downloadHistoryAudio(item: SpeechHistoryEntity) {
+        val path = item.audioFilePath
+        if (path == null || !File(path).exists()) {
+            viewModelScope.launch {
+                _snackbarMessage.emit("File rekaman ini tidak ditemukan di memori.")
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            val bytes = File(path).readBytes()
+            val result = AudioExportManager.saveAudioToDownloads(
+                context = getApplication(),
+                audioBytes = bytes,
+                baseFileName = item.voiceName
+            )
+            result.onSuccess { msg ->
+                _snackbarMessage.emit("Berhasil! $msg")
+            }.onFailure { err ->
+                _snackbarMessage.emit("Gagal mengunduh: ${err.message}")
+            }
+        }
+    }
+
+    /**
+     * Shares an audio item from history
+     */
+    fun shareHistoryAudio(item: SpeechHistoryEntity) {
+        val path = item.audioFilePath
+        if (path == null || !File(path).exists()) {
+            viewModelScope.launch {
+                _snackbarMessage.emit("File rekaman ini tidak ditemukan di memori.")
+            }
+            return
+        }
+
+        AudioExportManager.shareAudioFile(
+            context = getApplication(),
+            filePath = path,
+            title = item.voiceName
+        )
     }
 
     override fun onCleared() {

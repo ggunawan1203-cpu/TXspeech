@@ -16,17 +16,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -56,6 +61,8 @@ fun AudioPlayerCard(
     onReplay: () -> Unit,
     onSeek: (Long) -> Unit,
     onToggleSave: () -> Unit,
+    onDownload: () -> Unit,
+    onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -227,6 +234,58 @@ fun AudioPlayerCard(
                         imageVector = Icons.Default.Stop,
                         contentDescription = "Hentikan",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Action Buttons: Download and Share Audio
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                FilledTonalButton(
+                    onClick = onDownload,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .testTag("button_download_audio"),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Unduh Audio",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = onShare,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .testTag("button_share_audio"),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Bagikan",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp
                     )
                 }
             }
