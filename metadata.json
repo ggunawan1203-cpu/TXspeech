@@ -1,0 +1,6 @@
+{
+  "name": "Suara AI",
+  "description": "Aplikasi Text to Speech Bahasa Indonesia natural dengan pilihan suara AI ekspresif, kontrol intonasi, dan pemutar audio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
