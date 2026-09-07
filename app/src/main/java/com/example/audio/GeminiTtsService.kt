@@ -1,5 +1,6 @@
 package com.example.audio
 
+import android.content.Context
 import android.util.Base64
 import android.util.Log
 import com.example.BuildConfig
@@ -13,7 +14,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-class GeminiTtsService {
+class GeminiTtsService(private val context: Context? = null) {
+
+    private val prefs = context?.getSharedPreferences("suara_ai_prefs", Context.MODE_PRIVATE)
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
@@ -23,9 +26,28 @@ class GeminiTtsService {
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
+    fun getApiKey(): String {
+        val userCustomKey = prefs?.getString("custom_gemini_api_key", "")?.trim() ?: ""
+        if (userCustomKey.isNotBlank()) {
+            return userCustomKey
+        }
+        val envKey = BuildConfig.GEMINI_API_KEY.trim()
+        if (envKey.isNotBlank() && envKey != "MY_GEMINI_API_KEY") {
+            return envKey
+        }
+        return ""
+    }
+
     fun isApiKeyConfigured(): Boolean {
-        val key = BuildConfig.GEMINI_API_KEY
-        return key.isNotBlank() && key != "MY_GEMINI_API_KEY"
+        return getApiKey().isNotBlank()
+    }
+
+    fun saveCustomApiKey(key: String) {
+        prefs?.edit()?.putString("custom_gemini_api_key", key.trim())?.apply()
+    }
+
+    fun clearCustomApiKey() {
+        prefs?.edit()?.remove("custom_gemini_api_key")?.apply()
     }
 
     /**
@@ -36,10 +58,10 @@ class GeminiTtsService {
         geminiVoiceName: String,
         stylePrompt: String
     ): Result<ByteArray> = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+        val apiKey = getApiKey()
         if (!isApiKeyConfigured()) {
             return@withContext Result.failure(
-                IllegalStateException("Kunci Gemini API belum diatur. Silakan atur di Secrets Panel AI Studio, atau gunakan Mode Suara Perangkat.")
+                IllegalStateException("Kunci Gemini API belum diatur. Masukkan kunci API Gemini pribadi Anda atau gunakan Mode Suara Perangkat.")
             )
         }
 
@@ -154,7 +176,7 @@ class GeminiTtsService {
      * Polishes Indonesian text with conversational prosody, natural pauses, and expressive punctuation
      */
     suspend fun enhanceIndonesianText(rawText: String, styleName: String): Result<String> = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+        val apiKey = getApiKey()
         if (!isApiKeyConfigured()) {
             return@withContext Result.failure(
                 IllegalStateException("Kunci Gemini API belum diatur.")

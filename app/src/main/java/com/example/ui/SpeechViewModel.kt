@@ -28,7 +28,7 @@ import java.io.File
 class SpeechViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = SpeechRepository(application)
-    private val geminiTtsService = GeminiTtsService()
+    private val geminiTtsService = GeminiTtsService(application)
     val deviceTtsManager = DeviceTtsManager(application)
     val audioPlayer = AudioPlayerManager(application)
 
@@ -51,6 +51,9 @@ class SpeechViewModel(application: Application) : AndroidViewModel(application) 
     )
     val engineType: StateFlow<TtsEngineType> = _engineType.asStateFlow()
 
+    private val _isApiKeyConfigured = MutableStateFlow(geminiTtsService.isApiKeyConfigured())
+    val isApiKeyConfigured: StateFlow<Boolean> = _isApiKeyConfigured.asStateFlow()
+
     private val _pitch = MutableStateFlow(1.0f)
     val pitch: StateFlow<Float> = _pitch.asStateFlow()
 
@@ -72,8 +75,27 @@ class SpeechViewModel(application: Application) : AndroidViewModel(application) 
     private val _snackbarMessage = MutableSharedFlow<String>()
     val snackbarMessage: SharedFlow<String> = _snackbarMessage.asSharedFlow()
 
-    val isApiKeyConfigured: Boolean
-        get() = geminiTtsService.isApiKeyConfigured()
+    fun getCustomApiKey(): String = geminiTtsService.getApiKey()
+
+    fun saveCustomApiKey(key: String) {
+        geminiTtsService.saveCustomApiKey(key)
+        val isConfigured = geminiTtsService.isApiKeyConfigured()
+        _isApiKeyConfigured.value = isConfigured
+        if (isConfigured) {
+            _engineType.value = TtsEngineType.AI_STUDIO
+        }
+        viewModelScope.launch {
+            _snackbarMessage.emit("Kunci API Gemini pribadi berhasil disimpan!")
+        }
+    }
+
+    fun clearCustomApiKey() {
+        geminiTtsService.clearCustomApiKey()
+        _isApiKeyConfigured.value = geminiTtsService.isApiKeyConfigured()
+        viewModelScope.launch {
+            _snackbarMessage.emit("Kunci API telah dihapus.")
+        }
+    }
 
     fun updateInputText(newText: String) {
         _inputText.value = newText
@@ -140,7 +162,7 @@ class SpeechViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun speakDirectText(text: String) {
-        if (_engineType.value == TtsEngineType.AI_STUDIO && isApiKeyConfigured) {
+        if (_engineType.value == TtsEngineType.AI_STUDIO && _isApiKeyConfigured.value) {
             viewModelScope.launch {
                 _isGenerating.value = true
                 val result = geminiTtsService.generateSpeechAudio(

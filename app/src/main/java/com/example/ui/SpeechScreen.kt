@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Stop
@@ -66,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ui.components.ApiKeyDialog
 import com.example.ui.components.AudioPlayerCard
 import com.example.ui.components.EngineToggleCard
 import com.example.ui.components.ExpressiveStyleChips
@@ -100,10 +102,12 @@ fun SpeechScreen(
     val historyList by viewModel.historyList.collectAsStateWithLifecycle()
 
     val isIndonesianSupportedOnDevice by viewModel.deviceTtsManager.isIndonesianSupported.collectAsStateWithLifecycle()
+    val isApiKeyConfigured by viewModel.isApiKeyConfigured.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     var showPresetsDialog by remember { mutableStateOf(false) }
     var showHistoryDialog by remember { mutableStateOf(false) }
+    var showApiKeyDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.snackbarMessage.collect { message ->
@@ -158,6 +162,18 @@ fun SpeechScreen(
                     }
                 },
                 actions = {
+                    // API Key Settings Button
+                    IconButton(
+                        onClick = { showApiKeyDialog = true },
+                        modifier = Modifier.testTag("button_open_api_key")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Key,
+                            contentDescription = "Kunci API Gemini",
+                            tint = if (isApiKeyConfigured) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     // Presets Button
                     IconButton(
                         onClick = { showPresetsDialog = true },
@@ -449,7 +465,8 @@ fun SpeechScreen(
                 speechRate = speechRate,
                 onSpeechRateChanged = { viewModel.updateSpeechRate(it) },
                 isIndonesianSupportedOnDevice = isIndonesianSupportedOnDevice,
-                isApiKeyConfigured = viewModel.isApiKeyConfigured
+                isApiKeyConfigured = isApiKeyConfigured,
+                onOpenApiKeyDialog = { showApiKeyDialog = true }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -457,6 +474,15 @@ fun SpeechScreen(
     }
 
     // Dialogs
+    if (showApiKeyDialog) {
+        ApiKeyDialog(
+            currentApiKey = viewModel.getCustomApiKey(),
+            onDismiss = { showApiKeyDialog = false },
+            onSaveKey = { newKey -> viewModel.saveCustomApiKey(newKey) },
+            onClearKey = { viewModel.clearCustomApiKey() }
+        )
+    }
+
     if (showPresetsDialog) {
         SamplePresetsDialog(
             onDismiss = { showPresetsDialog = false },

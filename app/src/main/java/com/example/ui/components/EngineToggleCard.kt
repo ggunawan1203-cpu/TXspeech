@@ -50,6 +50,7 @@ fun EngineToggleCard(
     onSpeechRateChanged: (Float) -> Unit,
     isIndonesianSupportedOnDevice: Boolean,
     isApiKeyConfigured: Boolean,
+    onOpenApiKeyDialog: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -157,15 +158,23 @@ fun EngineToggleCard(
                     )
                     Surface(
                         color = if (isApiKeyConfigured) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onOpenApiKeyDialog() }
                     ) {
-                        Text(
-                            text = if (isApiKeyConfigured) "AI Aktif" else "Siap (Fallback Aktif)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isApiKeyConfigured) Color(0xFF2E7D32) else Color(0xFFE65100),
-                            fontSize = 10.sp,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = if (isApiKeyConfigured) "🔑 Kunci AI Aktif" else "🔑 Atur Kunci API",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isApiKeyConfigured) Color(0xFF2E7D32) else Color(0xFFE65100),
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             } else {
